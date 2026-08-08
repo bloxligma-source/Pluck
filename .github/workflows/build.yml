@@ -5,25 +5,34 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
-        with: { node-version: '20' }
-      - uses: actions/setup-java@v5
-        with: { distribution: 'temurin', java-version: '17' }
+        with:
+          node-version: '20'
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
+
       - name: Build APK
         run: |
+          rm -rf android www node_modules package-lock.json
           mkdir -p www
-          cp index.html www/index.html || cp *.html www/index.html
-          echo '{"name":"pluck","dependencies":{"@capacitor/core":"latest","@capacitor/android":"latest"}}' > package.json
+          cp index.html www/index.html
+          echo '{"name":"pluck","dependencies":{"@capacitor/core":"6.0.0","@capacitor/android":"6.0.0"},"devDependencies":{"@capacitor/cli":"6.0.0"}}' > package.json
           echo '{"appId":"com.pluck.app","appName":"Pluck","webDir":"www"}' > capacitor.config.json
-          npm install @capacitor/cli
+          npm install
           npx cap add android
           npx cap sync android
           cd android
           chmod +x gradlew
-          ./gradlew assembleDebug
+         ./gradlew assembleDebug --no-daemon
+
       - uses: actions/upload-artifact@v4
         with:
           name: Pluck-APK
-          path: android/app/build/outputs/apk/debug/*.apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
