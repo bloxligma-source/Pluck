@@ -7,17 +7,22 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: { node-version: '20' }
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with: { distribution: 'temurin', java-version: '17' }
-      - run: |
-          mkdir www
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+      - name: Build APK
+        run: |
+          mkdir -p www
           cp index.html www/index.html || cp *.html www/index.html
           echo '{"name":"pluck","dependencies":{"@capacitor/core":"latest","@capacitor/android":"latest"}}' > package.json
           echo '{"appId":"com.pluck.app","appName":"Pluck","webDir":"www"}' > capacitor.config.json
-          npm install
+          npm install @capacitor/cli
           npx cap add android
-          npx cap sync
-          cd android && chmod +x gradlew && ./gradlew assembleDebug
+          npx cap sync android
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug
       - uses: actions/upload-artifact@v4
         with:
           name: Pluck-APK
