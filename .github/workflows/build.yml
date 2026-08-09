@@ -18,18 +18,31 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
       - name: Setup Gradle 8.5
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: 8.5
 
+      - name: Debug - list files
+        run: |
+          pwd
+          ls -la
+          echo "--- find gradle files ---"
+          find . -maxdepth 4 -name "*.gradle" -o -name "gradlew" | head -n 20
+
       - name: Build Release APK
         run: |
-          if [ -f "./gradlew" ]; then
-            chmod +x ./gradlew
-            ./gradlew assembleRelease --no-daemon
+          echo "sdk.dir=$ANDROID_SDK_ROOT" > local.properties
+          GRADLEW=$(find . -name gradlew -type f | head -n 1)
+          if [ -n "$GRADLEW" ]; then
+            echo "Found wrapper at $GRADLEW"
+            chmod +x $GRADLEW
+            $GRADLEW assembleRelease --no-daemon
           else
-            echo "gradlew not found, using system gradle"
+            echo "No wrapper, using system gradle"
             gradle assembleRelease --no-daemon
           fi
 
